@@ -16,21 +16,23 @@ user.
 
 django-auth-ldap is not in `requirements.txt`, because its `python-ldap`
 dependency is a C extension that needs OpenLDAP's headers to build. Installing
-it is opt-in:
+it is opt-in. Install the headers first:
+
+- Debian / Ubuntu: `sudo apt-get install libldap2-dev libsasl2-dev`
+- RHEL / Fedora: `sudo dnf install openldap-devel cyrus-sasl-devel`
+- macOS: `brew install openldap`, then point the build at it with
+  `export LDFLAGS="-L$(brew --prefix openldap)/lib"` and
+  `export CPPFLAGS="-I$(brew --prefix openldap)/include"`
+
+then:
 
 ```bash
 pip install -r requirements.txt -r requirements-ldap.txt
 ```
 
-| Platform        | Headers needed first                                                                                                            |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Debian / Ubuntu | `sudo apt-get install libldap2-dev libsasl2-dev`                                                                                |
-| RHEL / Fedora   | `sudo dnf install openldap-devel cyrus-sasl-devel`                                                                              |
-| macOS           | `brew install openldap`, then `export LDFLAGS="-L$(brew --prefix openldap)/lib" CPPFLAGS="-I$(brew --prefix openldap)/include"` |
-
-Install them in your Docker build stage and in CI too. The LDAP tests need the
-package importable, because they exercise the real backend; they do not need a
-directory.
+Install those packages in your Docker build stage and in CI too. The LDAP tests
+need django-auth-ldap importable, because they exercise the real backend; they
+do not need a directory.
 
 ## Turn it on
 
@@ -55,17 +57,28 @@ same way it does for the OIDC settings.
 
 `.env.example` lists every variable with its default. The ones worth knowing:
 
-| Variable                                    | What it does                                                                                                                                                                                        |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LDAP_USER_SEARCH_FILTER`                   | How a typed username maps to a directory entry. `%(user)s` is substituted and escaped. Default `(&(objectClass=inetOrgPerson)(uid=%(user)s))`; on Active Directory use `(sAMAccountName=%(user)s)`. |
-| `LDAP_USER_ATTR_MAP`                        | `django_field=ldapAttribute` pairs, comma separated.                                                                                                                                                |
-| `LDAP_GROUP_SEARCH_BASE`                    | Where groups live. Leave blank and no group lookup happens at all.                                                                                                                                  |
-| `LDAP_GROUP_TYPE`                           | The schema your groups use — the full list is in `.env.example`. `groupOfNames` covers JumpCloud, OpenLDAP and FreeIPA.                                                                             |
-| `LDAP_MIRROR_GROUPS`                        | Copy directory groups onto the Django user at every login. Membership is then owned by the directory: a group someone has left is removed.                                                          |
-| `LDAP_MIRROR_GROUPS_ONLY`                   | Mirror just these group names, leaving any other Django group membership managed locally.                                                                                                           |
-| `LDAP_REQUIRE_GROUP` / `LDAP_DENY_GROUP`    | Full group DNs. Someone outside the required group, or inside the denied one, cannot sign in even with the right password.                                                                          |
-| `LDAP_STAFF_GROUP` / `LDAP_SUPERUSER_GROUP` | Full group DNs granting `is_staff` / `is_superuser`. Re-evaluated at every login, so removing someone from the group removes the flag.                                                              |
-| `LDAP_CACHE_TIMEOUT`                        | Seconds to cache the user lookup and group membership. An hour by default; set `0` while debugging a group rule.                                                                                    |
+- `LDAP_USER_SEARCH_FILTER` — how a typed username maps to a directory entry.
+  `%(user)s` is substituted and escaped. Defaults to
+  `(&(objectClass=inetOrgPerson)(uid=%(user)s))`; on Active Directory use
+  `(sAMAccountName=%(user)s)`.
+- `LDAP_USER_ATTR_MAP` — `django_field=ldapAttribute` pairs, comma separated.
+- `LDAP_GROUP_SEARCH_BASE` — where groups live. Leave it blank and no group
+  lookup happens at all.
+- `LDAP_GROUP_TYPE` — the schema your groups use, listed in full in
+  `.env.example`. `groupOfNames` covers JumpCloud, OpenLDAP and FreeIPA.
+- `LDAP_MIRROR_GROUPS` — copy directory groups onto the Django user at every
+  login. Membership is then owned by the directory, so a group someone has left
+  is removed.
+- `LDAP_MIRROR_GROUPS_ONLY` — mirror just these group names, leaving any other
+  Django group membership managed locally.
+- `LDAP_REQUIRE_GROUP` and `LDAP_DENY_GROUP` — full group DNs. Someone outside
+  the required group, or inside the denied one, cannot sign in even with the
+  right password.
+- `LDAP_STAFF_GROUP` and `LDAP_SUPERUSER_GROUP` — full group DNs granting
+  `is_staff` and `is_superuser`. Both are re-evaluated at every login, so
+  removing someone from the group removes the flag.
+- `LDAP_CACHE_TIMEOUT` — seconds to cache the user lookup and group membership.
+  An hour by default; set `0` while debugging a group rule.
 
 A variable you have not filled in yet is reported by `manage.py check`. A
 variable filled in with something meaningless — an unknown `LDAP_GROUP_TYPE`, a
