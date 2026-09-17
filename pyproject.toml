@@ -227,10 +227,13 @@ commands = [["pip", "install", "zizmor"], ["zizmor", "."]]
 
 # Django test suite, run under pytest-django. Installs the app's own
 # dependencies, unlike the lint envs, because the tests import Django.
+# requirements-ldap.txt is here so the LDAP tests actually run rather than
+# being skipped; python-ldap builds against the system headers that the
+# django-tests job in tests.yml installs first.
 [tool.tox.env.test]
 skip_install = true
 base_python = "python3"
-deps = ["-r requirements.txt"]
+deps = ["-r requirements.txt", "-r requirements-ldap.txt"]
 commands = [["pytest", "-q"]]
 
 # --- Aggregate (CI) ---------------------------------------------------------
