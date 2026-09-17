@@ -1,0 +1,10 @@
+# LDAP login (AUTH_ENABLE_LDAP=true). Install alongside requirements.txt:
+#
+#     pip install -r requirements.txt -r requirements-ldap.txt
+#
+# Kept separate because python-ldap is a C extension: it needs OpenLDAP's
+# headers to build, which requirements.txt should not force on a deployment
+# that signs people in through SSO alone. See docs/ldap.md for the packages
+# each platform needs.
+django-auth-ldap>=5.1,<6
+python-ldap>=3.4,<4
