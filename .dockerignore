@@ -1,0 +1,12 @@
+.git
+.github
+.tox
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+node_modules
+staticfiles
+db.sqlite3
+.env
+docs
