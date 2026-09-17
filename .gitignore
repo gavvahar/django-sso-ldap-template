@@ -8,3 +8,12 @@ AGENTS.md
 copilot-instructions.md
 CLAUDE.md
 node_modules
+
+# Python / Django
+__pycache__/
+.pytest_cache/
+*.py[cod]
+db.sqlite3
+staticfiles/
+.venv
+venv

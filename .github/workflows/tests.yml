@@ -11,3 +11,10 @@ jobs:
     uses: $/.github/workflows/tox-check-reusable.yml
     with:
       tox_env: github
+
+  django-tests:
+    permissions:
+      contents: read
+    uses: $/.github/workflows/tox-check-reusable.yml
+    with:
+      tox_env: test
