@@ -99,6 +99,15 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Serves the collected files straight from the application, so a container
+# running gunicorn needs no web server in front of it for /static/ -- the
+# admin's CSS above all. It goes directly after SecurityMiddleware, as
+# whitenoise requires, and stands down until `manage.py collectstatic` has run
+# (the Docker image runs it at build time): before that there is nothing to
+# serve, and `runserver` serves static files itself while DEBUG is on.
+if STATIC_ROOT.is_dir():
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Behind a TLS-terminating proxy the redirect_uri must still be built as https.

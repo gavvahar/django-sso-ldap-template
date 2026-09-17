@@ -1,0 +1,54 @@
+# Runs the template with `docker compose up --build`, reachable on
+# http://localhost:8000/. Copy .env.example to .env first: compose reads it for
+# the ${...} values below and passes the whole file to the container, so every
+# setting documented in .env.example applies here unchanged.
+#
+# Nothing but the database path is set for the container directly, so a value
+# in .env is never silently overridden.
+#
+# While SSO is enabled and half-configured Django refuses to start and the log
+# says which settings are blank. Set AUTH_ENABLE_OIDC=false to bring the stack
+# up before a provider exists. Full walkthrough: docs/docker.md.
+
+name: django-sso-ldap
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Set to false to leave python-ldap out of the image. Enabling
+        # AUTH_ENABLE_LDAP then has nothing to import, so keep it on if the
+        # deployment might ever use the directory.
+        INSTALL_LDAP: ${INSTALL_LDAP:-true}
+    env_file:
+      # Optional so that a fresh clone still starts. Without it Django falls
+      # back to the insecure development secret key, which is fine for a look
+      # around and not for anything else.
+      - path: .env
+        required: false
+    environment:
+      # SQLite file on the volume below, not inside the container, so it
+      # survives a rebuild. Point it at a bind mount if you would rather keep
+      # the database in the project directory.
+      DJANGO_DB_PATH: /var/lib/django/db.sqlite3
+    ports:
+      - "${DJANGO_PORT:-8000}:8000"
+    volumes:
+      - django-data:/var/lib/django
+    restart: unless-stopped
+    healthcheck:
+      # The home page is public, so a 200 means Django answered without a
+      # login. urllib is used because the image ships no curl.
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/")
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  django-data:

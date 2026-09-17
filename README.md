@@ -37,6 +37,18 @@ Directory groups then drive Django groups and the staff/superuser flags, and
 [docs/ldap.md](docs/ldap.md) covers the settings, a JumpCloud walkthrough, and
 how to debug a directory that will not answer.
 
+## Docker
+
+```bash
+cp .env.example .env    # fill in the secret key and the provider
+docker compose up --build
+```
+
+One container, no web server in front of it: gunicorn with whitenoise, and
+SQLite on a named volume. LDAP is installed in the image, so enabling it later
+costs a restart rather than a rebuild. [docs/docker.md](docs/docker.md) covers
+the first run, reverse proxies and the database.
+
 | Path         | Purpose                                                          |
 | ------------ | ---------------------------------------------------------------- |
 | `manage.py`  | Django entry point                                               |
