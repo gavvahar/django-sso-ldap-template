@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+  <h1>Profile</h1>
+  <p>Everything below was mapped from the provider's claims at login.</p>
+  <dl>
+    <dt>Username</dt><dd>{{ user.get_username }}</dd>
+    <dt>Email</dt><dd>{{ user.email|default:"—" }}</dd>
+    <dt>Name</dt><dd>{{ user.get_full_name|default:"—" }}</dd>
+    <dt>Groups</dt>
+    <dd>{% for group in user.groups.all %}{{ group.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</dd>
+    <dt>Staff</dt><dd>{{ user.is_staff|yesno:"yes,no" }}</dd>
+  </dl>
+{% endblock %}

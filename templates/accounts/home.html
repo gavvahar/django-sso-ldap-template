@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Django SSO template</h1>
+  {% if user.is_authenticated %}
+    <p>You are signed in. <a href="{% url 'profile' %}">See what the provider sent</a>.</p>
+  {% else %}
+    <p>This page is public. Use <em>Log in with SSO</em> to authenticate against your
+    OpenID Connect provider, then visit the profile page.</p>
+  {% endif %}
+{% endblock %}

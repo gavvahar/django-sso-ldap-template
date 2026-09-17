@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Django SSO template{% endblock %}</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; }
+    nav { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; }
+    button, .button { font: inherit; padding: .5rem 1rem; border-radius: .375rem; border: 1px solid currentColor; background: none; color: inherit; text-decoration: none; cursor: pointer; }
+    dt { font-weight: 600; margin-top: .75rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="{% url 'home' %}">Home</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'profile' %}">Profile</a>
+      <span>Signed in as <strong>{{ user.get_username }}</strong></span>
+      <form method="post" action="{% url 'oidc_logout' %}">
+        {% csrf_token %}
+        <button type="submit">Log out</button>
+      </form>
+    {% else %}
+      <a class="button" href="{% url 'oidc_authentication_init' %}">Log in with SSO</a>
+    {% endif %}
+  </nav>
+  {% block content %}{% endblock %}
+</body>
+</html>
