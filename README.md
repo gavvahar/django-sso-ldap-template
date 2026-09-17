@@ -4,7 +4,7 @@ A reusable Django project template whose login works against a self-hosted
 identity provider out of the box, on top of the self-hosting tooling baseline
 (linting, CI, release automation) this repo was created from.
 
-SSO through OpenID Connect is wired up now; LDAP login is being added alongside it.
+Two login methods are wired up: SSO through OpenID Connect, and LDAP. Each is switched on independently, so a deployment can run either, both, or neither alongside Django's own passwords.
 
 ## Django project
 
@@ -24,6 +24,19 @@ still blank.
 [docs/sso.md](docs/sso.md) covers registering the app in Authentik, the settings
 that drive it, and what the template does with the provider's claims.
 
+LDAP is off until you set `AUTH_ENABLE_LDAP=true`. Its dependency is installed
+separately, because `python-ldap` is a C extension that needs OpenLDAP's headers
+(`apt-get install libldap2-dev libsasl2-dev` on Debian/Ubuntu):
+
+```bash
+pip install -r requirements-ldap.txt
+```
+
+Directory groups then drive Django groups and the staff/superuser flags, and
+`LDAP_REQUIRE_GROUP` / `LDAP_DENY_GROUP` turn group membership into access.
+[docs/ldap.md](docs/ldap.md) covers the settings, a JumpCloud walkthrough, and
+how to debug a directory that will not answer.
+
 | Path         | Purpose                                                          |
 | ------------ | ---------------------------------------------------------------- |
 | `manage.py`  | Django entry point                                               |
@@ -31,8 +44,10 @@ that drive it, and what the template does with the provider's claims.
 | `accounts/`  | Auth backend, configuration checks, views, tests                 |
 | `templates/` | Home and profile pages                                           |
 
-Run the Django tests with `python manage.py test`. They need no network and no
-provider, and are separate from the `tox` chain below, which lints the repo.
+Run the Django tests with `python manage.py test`, or `tox -e test` to run them
+the way CI does. They need no network, no provider and no directory; the LDAP
+tests drive an in-memory stand-in for a directory server, and need
+`requirements-ldap.txt` installed because they exercise the real backend.
 
 ## Tooling included
 
@@ -44,6 +59,7 @@ provider, and are separate from the `tox` chain below, which lints the repo.
   - `prettier` — `prettier --check` over CSS/JS/HTML/JSON/YAML/Markdown
   - `toml-lint` — `taplo` format/lint check over TOML files
   - `duplicate-code` — [jscpd](https://github.com/kucherenko/jscpd) zero-tolerance duplicate-code scan (config in `.jscpd.json`). Real duplication should be refactored into a shared file the callers source/import, not waved off by raising the threshold.
+  - `test` — the Django test suite under pytest-django
   - `github` — the full read-only CI chain (`lint` + `txt-lint` + `prettier` + `toml-lint` + `duplicate-code`)
   - `all` — `format` then `github`
   - Also configures [git-cliff](https://git-cliff.org/) for generating changelogs/PR descriptions from Conventional Commits.
