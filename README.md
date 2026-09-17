@@ -1,8 +1,40 @@
-# Self-Hosting-Template
+# django-sso-ldap-template
 
-A GitHub template repo for bootstrapping new self-hosting projects with linting, CI, and release automation already wired up.
+A reusable Django project template whose login works against a self-hosted
+identity provider out of the box, on top of the self-hosting tooling baseline
+(linting, CI, release automation) this repo was created from.
 
-## What's included
+SSO through OpenID Connect is wired up now; LDAP login is being added alongside it.
+
+## Django project
+
+```bash
+conda env create -f environment.yml -n django-sso
+conda activate django-sso
+cp .env.example .env
+python manage.py generate_secret_key   # paste into DJANGO_SECRET_KEY
+python manage.py migrate
+python manage.py runserver
+```
+
+Open <http://localhost:8000/> and use **Log in with SSO**. Until the provider
+settings are filled in, `python manage.py check` reports exactly which ones are
+still blank.
+
+[docs/sso.md](docs/sso.md) covers registering the app in Authentik, the settings
+that drive it, and what the template does with the provider's claims.
+
+| Path         | Purpose                                                          |
+| ------------ | ---------------------------------------------------------------- |
+| `manage.py`  | Django entry point                                               |
+| `config/`    | Settings, URLs, WSGI/ASGI, env helpers, OIDC endpoint derivation |
+| `accounts/`  | Auth backend, configuration checks, views, tests                 |
+| `templates/` | Home and profile pages                                           |
+
+Run the Django tests with `python manage.py test`. They need no network and no
+provider, and are separate from the `tox` chain below, which lints the repo.
+
+## Tooling included
 
 - **`environment.yml` / `requirements.txt`** — conda environment (Python, pip, `gh`) with Python deps installed via pip.
 - **`pyproject.toml`** — [tox](https://tox.wiki) environments for linting and formatting:
@@ -24,23 +56,15 @@ A GitHub template repo for bootstrapping new self-hosting projects with linting,
 - **`CODEOWNERS`** — defaults review ownership to `@Self-Host-Server/code-owners`.
 - **`.gitignore`** — editor/AI-assistant artifacts (`.vscode`, `.cursor`, `CLAUDE.md`, etc.), `.env`, `node_modules`.
 
-## Using this template
+## Running the checks
 
-1. Click **Use this template** on GitHub to create a new repo.
-2. Set up the environment:
+Install `tox` and run the full check chain locally before pushing:
 
-   ```bash
-   conda env create -f environment.yml
-   conda activate template
-   ```
-
-3. Install `tox` and run the full check locally before pushing:
-
-   ```bash
-   pip install tox
-   tox -e github   # lint + txt-lint + prettier + toml-lint + duplicate-code
-   tox -e format   # auto-fix formatting issues
-   ```
+```bash
+pip install tox
+tox -e github   # lint + txt-lint + prettier + toml-lint + duplicate-code
+tox -e format   # auto-fix formatting issues
+```
 
 ## Contributing
 
