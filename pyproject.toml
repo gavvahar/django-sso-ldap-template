@@ -49,6 +49,15 @@ ignore = ["E203", "E501", "E701", "E401", "B008"]
 
 
 # =============================================================================
+# PYTEST — Django test suite
+# =============================================================================
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+testpaths = ["accounts"]
+
+# =============================================================================
 # TOX — Test & task runner
 # =============================================================================
 
@@ -61,6 +70,7 @@ env_list = [
   "prettier",
   "toml-lint",
   "duplicate-code",
+  "test",
 ]
 work_dir = "/tmp/.tox"
 
@@ -212,6 +222,16 @@ commands = [
 skip_install = true
 allowlist_externals = ["pip", "zizmor"]
 commands = [["pip", "install", "zizmor"], ["zizmor", "."]]
+
+# --- Tests ------------------------------------------------------------------
+
+# Django test suite, run under pytest-django. Installs the app's own
+# dependencies, unlike the lint envs, because the tests import Django.
+[tool.tox.env.test]
+skip_install = true
+base_python = "python3"
+deps = ["-r requirements.txt"]
+commands = [["pytest", "-q"]]
 
 # --- Aggregate (CI) ---------------------------------------------------------
 
