@@ -116,16 +116,24 @@ AUTH_ENABLE_OIDC = env_bool("AUTH_ENABLE_OIDC", True)
 # Local passwords keep `manage.py createsuperuser` accounts able to reach
 # /admin/ when the provider is unreachable. Turn off to make SSO the only way in.
 AUTH_ENABLE_LOCAL_PASSWORDS = env_bool("AUTH_ENABLE_LOCAL_PASSWORDS", True)
+# Off by default: django-auth-ldap and its python-ldap dependency are installed
+# separately (requirements-ldap.txt), because python-ldap needs system
+# libraries to build. See docs/ldap.md.
+AUTH_ENABLE_LDAP = env_bool("AUTH_ENABLE_LDAP", False)
 
 AUTHENTICATION_BACKENDS = []
 if AUTH_ENABLE_OIDC:
     AUTHENTICATION_BACKENDS.append("accounts.auth.OIDCBackend")
+if AUTH_ENABLE_LDAP:
+    AUTHENTICATION_BACKENDS.append("django_auth_ldap.backend.LDAPBackend")
+# Last, so a directory account is authenticated against the directory rather
+# than against a stale password hash in the local database.
 if AUTH_ENABLE_LOCAL_PASSWORDS:
     AUTHENTICATION_BACKENDS.append("django.contrib.auth.backends.ModelBackend")
 if not AUTHENTICATION_BACKENDS:
     raise ImproperlyConfigured(
-        "No authentication backend is enabled: set AUTH_ENABLE_OIDC or "
-        "AUTH_ENABLE_LOCAL_PASSWORDS to true."
+        "No authentication backend is enabled: set AUTH_ENABLE_OIDC, "
+        "AUTH_ENABLE_LDAP or AUTH_ENABLE_LOCAL_PASSWORDS to true."
     )
 
 LOGIN_URL = "oidc_authentication_init"
@@ -168,6 +176,13 @@ OIDC_SYNC_GROUPS = env_bool("OIDC_SYNC_GROUPS", True)
 OIDC_STAFF_GROUP = env("OIDC_STAFF_GROUP", "")
 OIDC_SUPERUSER_GROUP = env("OIDC_SUPERUSER_GROUP", "")
 
+# --- LDAP ------------------------------------------------------------------
+
+# Imported only when enabled, so django-auth-ldap stays an optional dependency.
+# Every AUTH_LDAP_* setting is derived from the environment; see docs/ldap.md.
+if AUTH_ENABLE_LDAP:
+    from .auth_ldap import *  # noqa: E402,F401,F403
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -178,5 +193,11 @@ LOGGING = {
             "level": env("OIDC_LOG_LEVEL", "INFO"),
         },
         "accounts": {"handlers": ["console"], "level": env("OIDC_LOG_LEVEL", "INFO")},
+        # Says why a login was refused; without it a misconfigured directory
+        # looks exactly like a wrong password.
+        "django_auth_ldap": {
+            "handlers": ["console"],
+            "level": env("LDAP_LOG_LEVEL", "WARNING"),
+        },
     },
 }

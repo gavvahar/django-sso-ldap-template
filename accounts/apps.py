@@ -6,5 +6,6 @@ class AccountsConfig(AppConfig):
     name = "accounts"
 
     def ready(self):
-        # Registers the `manage.py check` rules for the SSO configuration.
-        from . import checks  # noqa: F401
+        # Registers the `manage.py check` rules for the SSO and LDAP settings.
+        # Each stands down when its own login method is switched off.
+        from . import checks, ldap_checks  # noqa: F401
