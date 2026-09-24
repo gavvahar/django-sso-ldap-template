@@ -6,5 +6,5 @@
 # headers to build, which requirements.txt should not force on a deployment
 # that signs people in through SSO alone. See docs/ldap.md for the packages
 # each platform needs.
-django-auth-ldap>=5.1,<6
-python-ldap>=3.4,<4
+django-auth-ldap>=5.3.0,<6
+python-ldap>=3.4.8,<4
